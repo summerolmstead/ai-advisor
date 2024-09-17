@@ -1,0 +1,18 @@
+<html>
+<head>
+    <title>School Advisor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Welcome to the School Advisor App</h1>
+    <form action="/get_plan" method="post">
+        <label for="major">Choose a major:</label>
+        <select id="major" name="major">
+            <option value="cs">Computer Science</option>
+            <option value="math">Mathematics</option>
+            <!-- Add more options as needed -->
+        </select>
+        <button type="submit">Get Plan</button>
+    </form>
+</body>
+</html>
