@@ -1,8 +1,44 @@
 
 body {
-    background-color: #fff700; /* Example color */
+    background-image: url('utcpic2.jpg'); /* Ensure the image path is correct */
+    background-size: cover; /* Ensures the image covers the entire background */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
 }
 
+
 h1 {
-    color: #0000f7; /* Example color */
+    color: #000000; /* color of title utc colors */
+}
+form {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px; /* Width of the form */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-top: 20px; /* space above the form from paragraph above*/
+    /*margin-left: 50px; Move form to the right because it was too left and have to center it */
+}
+label {
+    color: white; /* Change label text color to white */
+}
+
+input {
+    margin: 10px 0;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+}
+button {
+    padding: 10px;
+    background-color: #1006c0; /* blue button to pop with bg */
+    color: white; 
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #06015d; /* darker blue on hover color for dimension */
 }

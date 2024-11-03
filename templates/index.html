@@ -1,18 +1,38 @@
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-    <title>School Advisor</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <meta charset="utf-8">
+    <title>Course Advisor</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        form { margin: 20px; }
+        input[type="text"], input[type="file"] { margin: 10px 0; }
+        .message { color: green; }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the School Advisor App</h1>
-    <form action="/get_plan" method="post">
-        <label for="major">Choose a major:</label>
-        <select id="major" name="major">
-            <option value="cs">Computer Science</option>
-            <option value="math">Mathematics</option>
-            <!-- Add more options as needed -->
-        </select>
-        <button type="submit">Get Plan</button>
+    <h1>Course Advisor</h1>
+    
+    <h2>Upload Your Transcript</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".pdf" required>
+        <input type="submit" value="Upload">
     </form>
+    
+    {% if message %}
+        <p class="message">{{ message }}</p>
+    {% endif %}
+
+    <h2>Select Your Major</h2>
+    <form action="/get_plan" method="post">
+        <select name="major" required>
+            <option value="" disabled selected>Select your major</option>
+            {% for major in majors %}
+                <option value="{{ major.id }}">{{ major.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Get Course Plan">
+    </form>
+
 </body>
 </html>

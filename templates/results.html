@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Course Plan</title>
+</head>
+<body>
+    <h1>Course Plan for {{ major }}</h1>
+
+    {% if classes and classes|length > 0 %}
+        <ul>
+            {% for course in classes %}
+                <li>{{ course.id }}: {{ course.name }}, {{ course.credit_hours }}</li>
+            {% endfor %}
+        </ul>
+    
+    {% else %}
+        <p>No courses found for this major.</p>
+    {% endif %}
+
+    <a href="/">Go back</a>
+</body>
+</html>
