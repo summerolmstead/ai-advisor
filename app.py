@@ -5,6 +5,129 @@ import re
 
 app = Flask(__name__)
 
+
+"""def parse_clearpath_text(text, major_name):
+    classes = {}
+    lines = text.splitlines()
+    current_major = major_name  # Use the provided major name from the PDF filename
+
+    # Skip the first two lines (assuming they are headers)
+    lines = lines[2:]
+
+    for line in lines:
+        line = line.strip()
+        if not line or "Completed" in line or "Graduation" in line or "Semester" in line or "Year" in line:
+            continue
+
+        # Handle "or" scenarios
+        if " or " in line:
+            or_pattern = r'([A-Z]{3,4} \d{4}): ([A-Za-z\s]+?)\s*or\s*([A-Z]{3,4} \d{4}): ([A-Za-z\s]+?)\s*(\d{1})?'
+            or_matches = re.findall(or_pattern, line)
+
+            for match in or_matches:
+                course_id1, course_name1, course_id2, course_name2, credit_hours = match
+                credit_hours = credit_hours.strip() if credit_hours else None
+
+                if current_major not in classes:
+                    classes[current_major] = []
+
+                # Append first course
+                classes[current_major].append({'id': course_id1.strip(), 'name': course_name1.strip(), 'credit_hours': credit_hours})
+                # Append second course
+                classes[current_major].append({'id': course_id2.strip(), 'name': course_name2.strip(), 'credit_hours': credit_hours})
+
+            continue
+
+        # Match regular course patterns (Updated regex)
+        # We allow the course name to include multiple words and spaces until a possible credit hour is encountered
+        course_pattern = r'([A-Z]{3,4} \d{4}): ([A-Za-z\s,\'\-]+)\s*(\d{1,2})?\s*'
+        matches = re.findall(course_pattern, line)
+
+        for match in matches:
+            course_id, course_name, credit_hours = match
+            credit_hours = credit_hours.strip() if credit_hours else None
+            
+            if current_major not in classes:
+                classes[current_major] = []
+            if not any(c['id'] == course_id for c in classes[current_major]):  # Avoid duplicates
+                classes[current_major].append({'id': course_id.strip(), 'name': course_name.strip(), 'credit_hours': credit_hours})
+
+    return {current_major: classes[current_major]} if current_major else {}"""
+
+def parse_clearpath_text(text, major_name):
+    classes = {}
+    lines = text.splitlines()
+    current_major = major_name  # Use the provided major name from the PDF filename
+
+    # Skip the first two lines (assuming they are headers)
+    lines = lines[2:]
+
+    for line in lines:
+        line = line.strip()
+        if not line or "Completed" in line or "Graduation" in line or "Semester" in line or "Year" in line or "Institution" in line:
+            continue
+
+        # Handle "or" scenarios (this includes electives or multiple course options)
+        if " or " in line:
+            or_pattern = r'([A-Z]{3,4} \d{4}): ([A-Za-z\s]+?)\s*or\s*([A-Z]{3,4} \d{4}): ([A-Za-z\s]+?)\s*(\d{1})?'
+            or_matches = re.findall(or_pattern, line)
+
+            for match in or_matches:
+                course_id1, course_name1, course_id2, course_name2, credit_hours = match
+                credit_hours = credit_hours.strip() if credit_hours else None
+
+                if current_major not in classes:
+                    classes[current_major] = []
+
+                # Append first course
+                classes[current_major].append({'id': course_id1.strip(), 'name': course_name1.strip(), 'credit_hours': credit_hours})
+                # Append second course
+                classes[current_major].append({'id': course_id2.strip(), 'name': course_name2.strip(), 'credit_hours': credit_hours})
+
+            continue
+
+        # Handle general degree requirements or non-specific course descriptions
+        general_pattern = r'([A-Za-z\s]+(?:Elective|Humanities|Behavioral|Natural Science|Approved|Writing|Communication|Fine Arts|Global Citizenship)[\w\s,\'\-]*)\s*(?:\((.*)\))?'
+        general_matches = re.findall(general_pattern, line)
+
+        for match in general_matches:
+            req_type, courses = match
+            courses = courses.strip() if courses else None
+            
+            if current_major not in classes:
+                classes[current_major] = []
+
+            # Store non-specific course requirements as a separate category
+            classes[current_major].append({
+                'id': None,  # No specific course ID
+                'name': req_type.strip(),
+                'credit_hours': courses  # Store optional courses in the credit_hours field
+            })
+
+        # Match regular course patterns (Updated regex)
+        course_pattern = r'([A-Z]{3,4} \d{4}): ([A-Za-z\s,\'\-]+)\s*(\d{1,2})?\s*'
+        matches = re.findall(course_pattern, line)
+
+        for match in matches:
+            course_id, course_name, credit_hours = match
+            credit_hours = credit_hours.strip() if credit_hours else None
+            
+            if current_major not in classes:
+                classes[current_major] = []
+            if not any(c['id'] == course_id for c in classes[current_major]):  # Avoid duplicates
+                classes[current_major].append({'id': course_id.strip(), 'name': course_name.strip(), 'credit_hours': credit_hours})
+
+    return {current_major: classes[current_major]} if current_major else {}
+
+
+def read_clearpath_pdf(file, major_name):
+    reader = PyPDF2.PdfReader(file)
+    text = ""
+    for page in reader.pages:
+        text += page.extract_text()
+
+    return parse_clearpath_text(text, major_name)
+
 def load_majors_from_folder(folder_path):
     majors = []
     for filename in os.listdir(folder_path):
@@ -13,144 +136,17 @@ def load_majors_from_folder(folder_path):
             majors.append({'id': major_name.lower(), 'name': major_name.replace('_', ' ').title()})
     return majors
 
-def read_clearpath_pdf(file):
-    reader = PyPDF2.PdfReader(file)
-    text = ""
-    for page in reader.pages:
-        text += page.extract_text()
-    return parse_clearpath_text(text)
-'''
-def parse_clearpath_text(text):
-    classes = {}
-    lines = text.splitlines()
-    current_major = None
-
-    # Skip the first two lines (assuming they are headers)
-    lines = lines[2:]
-
-    for line in lines:
-        line = line.strip()
-        if not line or "Completed" in line or "Graduation" in line:  # Skip empty lines and lines with specific text
-            continue
-        
-        # Use regex to find courses in the line
-        course_pattern = r'([A-Z]{3,4} \d{4}): ([A-Za-z\s]+?)(?=\s*\d{1,2})\s*(\d{1,2})?\s*'
-        matches = re.findall(course_pattern, line)
-
-        for match in matches:
-            if match[0]:  # Check if the course ID exists
-                course_id = match[0].strip()  # First captured group: Course ID
-                course_name = match[1].strip()  # Second captured group: Course Name
-                credit_hours = match[2].strip() if match[2] else None  # Third captured group: Credit Hours
-                
-                # Store the course details in the classes dictionary under the current major
-                if current_major not in classes:
-                    classes[current_major] = []
-                classes[current_major].append({
-                    'id': course_id,
-                    'name': course_name,
-                    'credit_hours': credit_hours
-                })
-
-        # Check if the line indicates a new major
-        if ':' in line and not matches:  # This line does not have courses but might indicate a major
-            parts = line.split(':')
-            current_major = parts[0].strip()  # Update the current major
-
-    return classes
-'''
-
-#handling or scenario 
-import re
-
-def parse_clearpath_text(text):
-    classes = {}
-    lines = text.splitlines()
-    current_major = None
-
-    # Skip the first two lines (assuming they are headers)
-    lines = lines[2:]
-
-    for line in lines:
-        line = line.strip()
-        if not line or "Completed" in line or "Graduation" in line:  # Skip empty lines and lines with specific text
-            continue
-        if not line or "Semester" in line or "Year" in line:  # Skip empty lines and lines with specific text
-            continue
-
-        # Check if the line indicates a new major
-        if ':' in line and not re.search(r'\b[A-Z]{3,4} \d{4}\b', line):
-            # If it contains a colon but doesn't have a course ID, treat it as a major
-            parts = line.split(':')
-            current_major = parts[0].strip()  # Update the current major
-            continue
-
-        # Check for " or " to identify scenarios with two courses
-        if " or " in line:
-            # Handle "or" scenarios
-            or_pattern = r'([A-Z]{3,4} \d{4}): ([A-Za-z\s]+?)\s*or\s*([A-Z]{3,4} \d{4}): ([A-Za-z\s]+?)\s*(\d{1})\s*'
-            or_matches = re.findall(or_pattern, line)
-
-            for match in or_matches:
-                if match[0]:  # Check if the first course ID exists
-                    course_id1 = match[0].strip()  # First course ID
-                    course_name1 = match[1].strip()  # First course Name
-                    course_id2 = match[2].strip()  # Second course ID
-                    course_name2 = match[3].strip()  # Second course Name
-                    credit_hours = match[4].strip() if match[4] else None  # Credit Hours
-
-                    # Store the first course details
-                    if current_major not in classes:
-                        classes[current_major] = []
-                    classes[current_major].append({
-                        'id': course_id1,
-                        'name': f"{course_name1} (or {course_name2})",
-                        'credit_hours': credit_hours
-                    })
-
-                    # Store the second course details
-                    classes[current_major].append({
-                        'id': course_id2,
-                        'name': f"{course_name2} (or {course_name1})",
-                        'credit_hours': credit_hours
-                    })
-
-            continue  # Skip to the next line after processing "or"
-
-        # Use regex to find courses in the line that do not contain "or"
-        course_pattern = r'([A-Z]{3,4} \d{4}): ([A-Za-z\s]+?)(?=\s*\d{1})\s*(\d{1})\s*'
-        matches = re.findall(course_pattern, line)
-
-        for match in matches:
-            if match[0]:  # Check if the course ID exists
-                course_id = match[0].strip()  # Course ID
-                course_name = match[1].strip()  # Course Name
-                credit_hours = match[2].strip() if match[2] else None  # Credit Hours
-
-                # Store the course details in the classes dictionary under the current major
-                if current_major not in classes:
-                    classes[current_major] = []
-                classes[current_major].append({
-                    'id': course_id,
-                    'name': course_name,
-                    'credit_hours': credit_hours
-                })
-
-    return classes
-
-
 def load_clearpaths_from_folder(folder_path):
     all_classes = {}
     for filename in os.listdir(folder_path):
         if filename.endswith('.pdf'):
+            major_name = filename[:-4]  # Extract major from filename
             with open(os.path.join(folder_path, filename), 'rb') as file:
-                clearpath_classes = read_clearpath_pdf(file)
+                clearpath_classes = read_clearpath_pdf(file, major_name)
                 all_classes.update(clearpath_classes)
                 print(f"Loaded classes from {filename}: {clearpath_classes}")  # Print the recognized classes
     return all_classes
 
-
-# Update this path to your actual clearpaths directory
 clearpaths_folder = 'C:\\Users\\Summer\\Desktop\\ai-advisor\\clearpaths'  # Change as needed
 majors = load_majors_from_folder(clearpaths_folder)
 classes = load_clearpaths_from_folder(clearpaths_folder)  # Load classes at startup
@@ -161,7 +157,6 @@ def index():
     print(f"Loaded majors: {majors}")  # Check loaded majors
     return render_template('index.html', majors=majors)
 
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
     global classes
@@ -171,13 +166,16 @@ def upload_file():
     if file.filename == '':
         return "No selected file"
     
-    # Read the ClearPath PDF and update the classes dictionary
-    classes = load_clearpaths_from_folder(clearpaths_folder)
+    # Extract the major from the uploaded file's name
+    major_name = file.filename[:-4]  # Remove the '.pdf' extension
+    with open(file, 'rb') as uploaded_file:
+        # Read and parse the uploaded ClearPath PDF and update the global classes dictionary
+        clearpath_classes = read_clearpath_pdf(uploaded_file, major_name)
+        classes.update(clearpath_classes)  # Update global classes with new data
     
     # Show success message and recognized classes
     message = "File uploaded and processed successfully."
     return render_template('index.html', majors=majors, classes=classes, message=message)
-
 
 @app.route('/get_plan', methods=['POST'])
 def get_plan():
@@ -196,6 +194,20 @@ def get_plan():
         return render_template('results.html', major=major, classes=major_classes)
     else:
         return render_template('results.html', major=major, classes=[], error="No plan available. Please pick a valid major.")
+
+from flask import Flask, render_template, request, redirect, url_for
+
+@app.route('/schedule', methods=['POST'])
+def schedule():
+    completed_courses = request.form.getlist('completed_courses')  # Get the list of completed courses from the form
+
+    remaining_courses = []
+    for course in classes.get(major, []):  # Get the list of courses for the selected major
+        if course['id'] not in completed_courses:
+            remaining_courses.append(course)  # If the course wasn't completed, add to remaining courses
+
+    return render_template('schedule.html', remaining_courses=remaining_courses, major=major)
+
 
 
 if __name__ == '__main__':

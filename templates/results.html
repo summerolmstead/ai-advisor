@@ -2,22 +2,137 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Course Plan</title>
+    <title>Course Plan for {{ major }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        h1 {
+            background-color: #007bff;
+            color: white;
+            padding: 20px 0;
+            margin: 0;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 900px;
+            margin: 20px auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        td {
+            background-color: #f9f9f9;
+        }
+
+        .form-group {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        label {
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .button:hover {
+            background-color: #218838;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+    </style>
 </head>
 <body>
+
     <h1>Course Plan for {{ major }}</h1>
 
-    {% if classes and classes|length > 0 %}
-        <ul>
-            {% for course in classes %}
-                <li>{{ course.id }}: {{ course.name }}, {{ course.credit_hours }}</li>
-            {% endfor %}
-        </ul>
-    
-    {% else %}
-        <p>No courses found for this major.</p>
-    {% endif %}
+    <div class="container">
+        <h2>Courses Required</h2>
+        {% if classes and classes|length > 0 %}
+        
+        <form action="/schedule" method="post">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Course ID</th>
+                        <th>Course Name</th>
+                        <th>Credit Hours</th>
+                        <th>Have You Taken This?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in classes %}
+                        <tr>
+                            <td>{{ course.id }}</td>
+                            <td>{{ course.name }}</td>
+                            <td>{{ course.credit_hours or 'N/A' }}</td>
+                            <td>
+                                <input type="checkbox" name="completed_courses" value="{{ course.id }}">
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div class="form-group">
+                <label for="completed_courses">Select the courses you've already taken</label>
+            </div>
+            
+            <button type="submit" class="button">Submit Your Courses</button>
+        </form>
 
-    <a href="/">Go back</a>
+        {% else %}
+            <p>No courses found for this major.</p>
+        {% endif %}
+        
+        <a href="/">Go back</a>
+    </div>
+
 </body>
 </html>
+

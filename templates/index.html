@@ -4,35 +4,217 @@
     <meta charset="utf-8">
     <title>Course Advisor</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        form { margin: 20px; }
-        input[type="text"], input[type="file"] { margin: 10px 0; }
-        .message { color: green; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f7f7f7;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: #6c5ce7;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .container {
+            background: white;
+            width: 90%;
+            max-width: 700px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 50px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="file"],
+        select,
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #fff;
+            margin-top: 10px;
+        }
+
+        input[type="file"]:hover,
+        select:hover,
+        input[type="submit"]:hover {
+            border-color: #6c5ce7;
+            cursor: pointer;
+        }
+
+        input[type="submit"] {
+            background-color: #6c5ce7;
+            color: white;
+            border: none;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #5a4cd1;
+        }
+
+        .message {
+            color: #4caf50;
+            margin-top: 20px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            display: none;
+        }
+
+        .loading-container {
+            text-align: center;
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar-container {
+            width: 80%;
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: #6c5ce7;
+            transition: width 0.5s ease;
+        }
+        
     </style>
 </head>
 <body>
-    <h1>Course Advisor</h1>
-    
-    <h2>Upload Your Transcript</h2>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".pdf" required>
-        <input type="submit" value="Upload">
-    </form>
-    
-    {% if message %}
-        <p class="message">{{ message }}</p>
-    {% endif %}
 
-    <h2>Select Your Major</h2>
-    <form action="/get_plan" method="post">
-        <select name="major" required>
-            <option value="" disabled selected>Select your major</option>
-            {% for major in majors %}
-                <option value="{{ major.id }}">{{ major.name }}</option>
-            {% endfor %}
-        </select>
-        <input type="submit" value="Get Course Plan">
-    </form>
+    <!-- Main Page with Forms -->
+    <div class="container">
+        <h1>Course Advisor</h1>
+        
+        <h2>Upload Your Transcript</h2>
+        <form action="/get_plan" method="post" enctype="multipart/form-data" id="upload-form">
+            <div class="form-group">
+                <input type="file" name="file" accept=".pdf" required>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Upload">
+            </div>
+        </form>
+
+        <h2>Select Your Major</h2>
+        <form action="/get_plan" method="post" id="major-form">
+            <div class="form-group">
+                <select name="major" required>
+                    <option value="" disabled selected>Select your major</option>
+                    {% for major in majors %}
+                        <option value="{{ major.id }}">{{ major.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Get Course Plan">
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-container">
+            <div class="loading-text">Processing your request...</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to simulate progress bar
+        function simulateLoading() {
+            let progress = 0;
+            let progressBar = document.getElementById('progress-bar');
+            let loadingOverlay = document.getElementById('loading-overlay');
+
+            loadingOverlay.style.display = 'flex'; // Show the loading screen
+
+            let loadingInterval = setInterval(function () {
+                progress += 10;
+                progressBar.style.width = progress + '%';
+
+                if (progress === 100) {
+                    clearInterval(loadingInterval);
+                    // After loading completes, hide the loading screen
+                    setTimeout(function() {
+                        loadingOverlay.style.display = 'none';
+                    }, 500);
+                }
+            }, 500); // Simulate a loading process every 500ms
+        }
+
+        // Trigger the loading screen when the form is submitted
+        const uploadForm = document.getElementById('upload-form');
+        const majorForm = document.getElementById('major-form');
+        
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();  // Prevent actual form submission
+                simulateLoading();   // Show loading animation
+                setTimeout(function() {
+                    uploadForm.submit();  // Actually submit the form after loading screen
+                }, 3000); // Delay for demo purposes (simulate waiting)
+            });
+        }
+
+        if (majorForm) {
+            majorForm.addEventListener('submit', function(e) {
+                e.preventDefault();  // Prevent actual form submission
+                simulateLoading();   // Show loading animation
+                setTimeout(function() {
+                    majorForm.submit();  // Actually submit the form after loading screen
+                }, 3000); // Delay for demo purposes (simulate waiting)
+            });
+        }
+    </script>
 
 </body>
 </html>
