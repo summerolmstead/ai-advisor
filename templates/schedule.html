@@ -2,83 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Your Remaining Courses</title>
+
+    <!-- schedule page design!-->
+    <title>Remaining Courses for {{ major }}</title>
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            text-align: center;
-        }
-
-        h1 {
-            background-color: #007bff;
-            color: white;
-            padding: 20px 0;
-            margin: 0;
-        }
-
-        .container {
-            padding: 20px;
-            max-width: 900px;
-            margin: 20px auto;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        table {
+        body { font-family: Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 12px; text-align: left; border: 1px solid #ddd; }
+        th { background-color: #f4f4f4; }
+        h1 { color: #333; }
+        .progress-container {
             width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        table th, table td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-
-        td {
-            background-color: #f9f9f9;
-        }
-
-        .button {
-            background-color: #28a745;
-            color: white;
-            padding: 10px 20px;
-            border: none;
+            background-color: #ddd;
             border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
+            margin: 20px 0;
         }
-
-        .button:hover {
-            background-color: #218838;
+        .progress-bar {
+            height: 20px;
+            width: 0;
+            background-color: #2b00ff;
+            border-radius: 5px;
         }
-
-        a {
-            text-decoration: none;
-            color: #007bff;
-        }
+        .btn { padding: 10px 20px; background-color: #0f17ff; color: white; border: none; cursor: pointer; }
+        .btn:hover { background-color: #3700ff; }
     </style>
 </head>
 <body>
 
+    <!-- logic to print out courses havent taken based on results html -->
     <h1>Remaining Courses for {{ major }}</h1>
 
-    <div class="container">
-        <h2>Courses You Still Need to Take</h2>
+    {% if remaining_courses %}
+        <div class="progress-container">
+            <div class="progress-bar" style="width: {{ progress_percentage }}%"></div>
+        </div>
 
-        {% if remaining_courses %}
+        <!-- progress bar of how far into degree you are-->
+        <h3>Progress: {{ progress_percentage }}% Completed</h3>
+
+        <!-- just looping to show all of the courses left and printing into table-->
         <table>
             <thead>
                 <tr>
@@ -97,12 +60,10 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% else %}
-            <p>You've completed all the required courses!</p>
-        {% endif %}
+    {% else %}
+        <p>You have completed all the required courses! Congratulations!</p>
+    {% endif %}
 
-        <a href="/">Go back to select another major</a>
-    </div>
-
+    <a href="/">Go back to home page</a>
 </body>
 </html>
