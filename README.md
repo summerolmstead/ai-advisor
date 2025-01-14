@@ -1,2 +1,2 @@
 # ai-advisor
-This is an ai advisor for UTC for the NSF ADACE club. In development + Testing. Need to : add features for class schedule
+This is an ai advisor for UTC for the NSF ADACE club. Currently on pause while pursuing school projects at the moment...
